@@ -1,0 +1,83 @@
+newmtl BodySG1
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd Boo21%58blinn1_Flattened_Diffuse.exr
+Ni 1.00
+Ks 0.50 0.50 0.50
+Ns 4.31
+newmtl HandSG1
+illum 4
+Kd 0.89 0.75 0.56
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+newmtl RoadKillOutSG3
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd lambert1_Flattened_Diffuse.exr
+Ni 1.00
+Ks 0.20 0.29 0.32
+Ns 3.43
+newmtl RoadKillOutSG7
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd ascot%58blinn1_Flattened_Diffuse.exr
+Ni 1.00
+Ks 0.50 0.50 0.50
+Ns 4.31
+newmtl RoadKillOutSG8
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd lambert9_Flattened_Diffuse.exr
+Ni 1.00
+Ks 0.00 0.00 0.00
+Ns 3.07
+newmtl RoadKillOutSG10
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+Ks 0.20 0.29 0.32
+Ns 3.43
+newmtl RoadKillOutSG13
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd Shirt_Dif.psd
+Ni 1.00
+Ks 0.20 0.29 0.32
+Ns 3.43
+newmtl initialShadingGroup
+illum 4
+Kd 0.47 0.47 0.47
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+newmtl lambert2SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+newmtl lambert2SG1
+illum 4
+Kd 1.00 1.00 0.39
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00
+newmtl lambert11SG
+illum 4
+Kd 0.84 0.67 0.57
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+Ni 1.00

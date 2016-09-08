@@ -84,10 +84,86 @@ class Face_Rigger:
                                                          w=self.buttonWidth, bgc=[0.3, 0.3, 0.3], ann=annotation,
                                                          c=self.createFollicleCtrlSetup)
 
+        self.UIElements["mirrorlyt_button"] = cmds.button(label='Mirror Lyt', p=self.UIElements["rowAFlowLayout"],
+                                                         w=self.buttonWidth, bgc=[0.3, 0.3, 0.3], ann=annotation,
+                                                         c=self.mirrorLyt)
+
+        self.UIElements["mirrormajorvals_button"] = cmds.button(label='Mirror Major Vals', p=self.UIElements["rowAFlowLayout"],
+                                                         w=self.buttonWidth, bgc=[0.3, 0.3, 0.3], ann=annotation,
+                                                         c=self.mirrorMajorVals)
+
 
 
         """ Show the window"""
         cmds.showWindow(self.windowName)
+
+    def mirrorMajorVals(self, *args):
+        if len(cmds.ls(sl=True))==0:
+            return
+        sel = cmds.ls(sl=True)[0] 
+
+        userattrs = cmds.listAttr(sel, ud=True)
+        mname = sel.replace('L_', 'R_', 1)
+        if cmds.objExists(mname)==True:
+            for u in userattrs:
+                mattr = u.replace('L_', 'R_', 1)
+                val=cmds.getAttr(sel+'.'+u)
+                try:
+                    cmds.setAttr(mname+'.'+mattr, val)
+                except: print mname+'.'+mattr
+
+    def mirrorLyt(self, *args):
+        """
+        Requires the lyt to be mirrored and
+        added to a namespace.
+        """
+        asset_info = {}
+        if len(cmds.ls(sl=True))==0:
+            return
+        sel = cmds.ls(sl=True)[0]
+        if cmds.nodeType(sel) != 'dagContainer':
+            return
+        assetcontents = cmds.container(sel, q=True, nl=True)
+        print sel
+        print assetcontents
+
+        # Find the Main_GRP
+        for a in assetcontents:
+            if 'Main_GRP' in a:
+                maingrp = a
+        print maingrp        
+
+        mmain = maingrp.replace('L_', 'R_')
+        print mmain
+
+        # Determine mirror namespace name
+        tv = maingrp.partition(':')[0]
+        mns = tv.replace('L_', 'R_')
+        cmds.namespace(set=':')
+        cmds.namespace(add=mns)
+        cmds.namespace(set=mns)
+ 
+        # Duplicate the Main_GRP
+        nodedupe = cmds.duplicate(maingrp, ic=True, rc=True, un=True)
+
+        mircon = cmds.container(n='FACE_LYT_01_AST')
+        print mmain
+        try:
+            cmds.container(sel, edit=True, rn=mmain, force=True)
+        except: pass
+
+        cmds.container(mircon, edit=True, an=mmain, f=True)
+
+        cmds.namespace(set=':')
+
+        for n in nodedupe:
+            cmds.container(mircon, edit=True, an=n, f=True)
+            cmds.container(mircon, edit=True, an=n, f=True)
+
+        
+
+
+
     def mirrorRigPart(self, *args):
         """
         Collect the contents of the asset selection
@@ -215,6 +291,7 @@ class Face_Rigger:
 
         # Delete history on the surface
         cmds.delete(lytnamespace + ':FACE_Surface', ch=True)
+        cmds.setAttr(lytnamespace + ':FACE_SurfaceShape.overrideEnabled', 0)
 
         # Remove DELETE nodes
         cmds.select(lytnamespace + ":DELETE*")
@@ -532,7 +609,10 @@ class Face_Rigger:
         #ctrlsp = cmds.listRelatives(ctrlshape, p=True)[0]
         #ctrl = 'ctrl_%s' % rootname
         #cmds.rename(ctrlsp, ctrl)
-        cmds.parent(jnt, ctrlgrp)
+        try:
+            cmds.setAttr(ctrl + '.ovverideEnabled', 0)
+        except: pass
+        cmds.parent(jnt, ctrl)
         cmds.parent(ctrlgrp, lctrsdk)
         cmds.parent(lctrsdk, lctroffsetscale)
         cmds.parent(lctroffsetscale, lctroffsetrot)

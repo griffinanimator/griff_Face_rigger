@@ -4,6 +4,11 @@ import system.utils as utils
 import pymel.core as pm
 import os
 
+
+"""
+NOTES
+Cant hookup minor translate to more than to major.  Mouth corner
+"""
 class Face_Rigger:
 
     def __init__(self):
@@ -92,10 +97,171 @@ class Face_Rigger:
                                                          w=self.buttonWidth, bgc=[0.3, 0.3, 0.3], ann=annotation,
                                                          c=self.mirrorMajorVals)
 
+        self.UIElements["lockhide_button"] = cmds.button(label='Lock Hide Controls', p=self.UIElements["rowAFlowLayout"],
+                                                         w=self.buttonWidth, bgc=[0.3, 0.3, 0.3], ann=annotation,
+                                                         c=self.lockHideControlAttrs)
+
+        self.UIElements["nullcontrol_button"] = cmds.button(label='Null Control', p=self.UIElements["rowAFlowLayout"],
+                                                         w=self.buttonWidth, bgc=[0.3, 0.3, 0.3], ann=annotation,
+                                                         c=self.nullControlSetup)
+
+        self.UIElements["consurface_button"] = cmds.button(label='surface To Main', p=self.UIElements["rowAFlowLayout"],
+                                                         w=self.buttonWidth, bgc=[0.3, 0.3, 0.3], ann=annotation,
+                                                         c=self.connectSurfaceToMajor)
+
 
 
         """ Show the window"""
         cmds.showWindow(self.windowName)
+
+    """
+    cmds.select('*_Surface')
+surfaces = cmds.ls(sl=True)
+cmds.select(d=True)
+blendasset = cmds.container(n='blend_Asset')
+grp = cmds.group(n='blend_Asset_GRP', em=True)
+cmds.container(blendasset, edit=True, an=grp)
+for s in surfaces:
+    nn = s.replace('Surface', 'SurfaceBlend')
+    dup = cmds.duplicate(s, n=nn)
+    cmds.container(blendasset, edit=True, an=dup[0], f=True)
+    cmds.parent*dup[0], grp)
+    print cmds.blendShape(dup[0], s, n='FacTarget_' + dup[0])
+    cmds.blendShape('FacTarget_' + dup[0], edit=True, en=1, w=[(0, 1)] ) 
+    """
+    def connectSurfaceToMajor(self, *args):
+        if cmds.ls(sl=True) == []:
+            return
+        sel = cmds.ls(sl=True)
+        if '_GRP' in sel[1]:
+            # Get the position of the selected object
+            mat = cmds.xform(sel[1], q=True, ws=True, m=True)
+            # Make an empty group
+
+            grpname = ('TransNull_' + sel[1])
+            cmds.select(d=True)
+            if cmds.objExists(grpname) == False:
+                grp = cmds.group(n=grpname, em=True)
+                cmds.xform(grp, ws=True, m=mat)
+                # Get the object parent 
+                p = cmds.listRelatives(sel[1], p=True)[0]
+                cmds.parent(grp, p)
+                cmds.parent(sel[1], grp)
+            grp = grpname 
+            """
+            parcon = cmds.parentConstraint(sel[0], grp, mo=True)
+            sccon = cmds.scaleConstraint(sel[0], grp, mo=True)
+
+            attrname = sel[1] 
+            if cmds.attributeQuery(attrname, node=sel[0], exists=True) == False:
+                cmds.addAttr(sel[0], shortName=attrname, longName=attrname, min=-1, max=1, defaultValue=0.0, k=False)
+            cmds.connectAttr(sel[0] +'.' + attrname, parcon[0] + '.' + sel[0] + 'W0')
+            cmds.connectAttr(sel[0] +'.' + attrname, sccon[0] + '.' + sel[0] + 'W0')
+            """
+
+      
+            # Make a multiplyDivide and pma
+            pmat = cmds.shadingNode("plusMinusAverage", asUtility=True, n='pmaNode_ctrlNullT_' + sel[0])
+            cmds.connectAttr(pmat+'.output3D', grp+'.translate')
+            
+
+            mdivt = cmds.shadingNode("multiplyDivide", asUtility=True, n='mdNode_ctrlNullT_' + sel[0])
+            cmds.connectAttr(sel[0]+'.translate', mdivt+'.input1')
+            
+            attrname = sel[0] + '_' + sel[1] + '_Tran'
+            if cmds.attributeQuery(attrname, node=sel[0], exists=True) == False:
+                cmds.addAttr(sel[0], shortName=attrname, longName=attrname, min=-1, max=1, defaultValue=0.0, k=False)
+            cmds.connectAttr(sel[0] + '.' + attrname, mdivt+'.input2X')
+            cmds.connectAttr(sel[0] + '.' + attrname, mdivt+'.input2Y')
+            cmds.connectAttr(sel[0] + '.' + attrname, mdivt+'.input2Z')
+
+            cmds.connectAttr(mdivt+'.output', pmat + '.input3D[0]')
+
+            # Rotate
+            pmar = cmds.shadingNode("plusMinusAverage", asUtility=True, n='pmaNode_ctrlNullR_' + sel[0])
+            cmds.connectAttr(pmar+'.output3D', grp+'.rotate')
+
+            mdivr = cmds.shadingNode("multiplyDivide", asUtility=True, n='mdNode_ctrlNullR_' + sel[0])
+            cmds.connectAttr(sel[0]+'.rotate', mdivr+'.input1')
+            
+            attrname = sel[0] + '_' + sel[1] + '_Rot'
+            if cmds.attributeQuery(attrname, node=sel[0], exists=True) == False:
+                cmds.addAttr(sel[0], shortName=attrname, longName=attrname, min=-1, max=1, defaultValue=0.0, k=False)
+            cmds.connectAttr(sel[0] + '.' + attrname, mdivr+'.input2X')
+            cmds.connectAttr(sel[0] + '.' + attrname, mdivr+'.input2Y')
+            cmds.connectAttr(sel[0] + '.' + attrname, mdivr+'.input2Z')
+
+            cmds.connectAttr(mdivr+'.output', pmar + '.input3D[0]')
+
+            # Scale
+            pmas = cmds.shadingNode("plusMinusAverage", asUtility=True, n='pmaNode_ctrlNullS_' + sel[0])
+            cmds.connectAttr(pmar+'.output3D', grp+'.scale')
+
+            mdivs = cmds.shadingNode("multiplyDivide", asUtility=True, n='mdNode_ctrlNullS_' + sel[0])
+            cmds.connectAttr(sel[0]+'.rotate', mdivs+'.input1')
+            
+            attrname = sel[0] + '_' + sel[1] + '_Scale'
+            if cmds.attributeQuery(attrname, node=sel[0], exists=True) == False:
+                cmds.addAttr(sel[0], shortName=attrname, longName=attrname, min=-1, max=1, defaultValue=0.0, k=False)
+            cmds.connectAttr(sel[0] + '.' + attrname, mdivs+'.input2X')
+            cmds.connectAttr(sel[0] + '.' + attrname, mdivs+'.input2Y')
+            cmds.connectAttr(sel[0] + '.' + attrname, mdivs+'.input2Z')
+
+            cmds.connectAttr(mdivs+'.output', pmas + '.input3D[0]')
+  
+  
+            cmds.select(sel[0])
+        else:
+            return
+
+    def nullControlSetup(self, *args):
+        if cmds.ls(sl=True) == []:
+            return
+        sel = cmds.ls(sl=True)
+        # Get the position of the selected object
+        for s in sel:
+            mat = cmds.xform(s, q=True, ws=True, m=True)
+            # Make an empty group
+            if cmds.objExists==True:
+                pass
+            else:
+                grpname = ('TransNull_' + s)
+                cmds.select(d=True)
+                grp = cmds.group(n=grpname, em=True)
+                cmds.xform(grp, ws=True, m=mat)
+                # Get the object parent 
+                p = cmds.listRelatives(s, p=True)[0]
+                cmds.parent(grp, p)
+                cmds.parent(s, grp)
+                # Make a multiplyDivide
+                mdivt = cmds.shadingNode("multiplyDivide", asUtility=True, n='mdNode_ctrlNullT_' + s)
+                cmds.connectAttr(s+'.translate', mdivt+'.input1')
+                cmds.connectAttr(mdivt+'.output', grp+'.translate')
+                cmds.setAttr(mdivt+'.input2X', -1)
+                cmds.setAttr(mdivt+'.input2Y', -1)
+                cmds.setAttr(mdivt+'.input2Z', -1)
+                """
+                mdivr = cmds.shadingNode("multiplyDivide", asUtility=True, n='mdNode_ctrlNullR_' + s)
+                cmds.connectAttr(s+'.rotate', mdivr+'.input1')
+                cmds.connectAttr(mdivr+'.output', grp+'.rotate')
+                cmds.setAttr(mdivr+'.input2X', -1)
+                cmds.setAttr(mdivr+'.input2Y', -1)
+                cmds.setAttr(mdivr+'.input2Z', -1)
+                """
+
+    def lockHideControlAttrs(self, *args):
+        if cmds.ls(sl=True) == []:
+            return
+        sel = cmds.ls(sl=True)
+        for s in sel:
+            cmds.transformLimits( s, tx=(-1, 1), ty=(-1, 1), tz=(-1, 1), rx=(-45, 45), ry=(-45, 45), rz=(-45, 45),
+                etx=(True, True), ety=(True, True), etz=(True, True), erx=(True, True), ery=(True, True), erz=(True, True) )
+            # Check if attribute has connection.
+            attrlist = ['.tx', '.ty', '.tz', '.rx', '.ry', '.rz', '.sx', '.sy', '.sz']
+            for a in attrlist:
+                iscon =  cmds.listConnections(s + a, d=True, s=False)
+                if iscon == None:
+                    cmds.setAttr(s + a, l=True)
 
     def mirrorMajorVals(self, *args):
         if len(cmds.ls(sl=True))==0:
@@ -402,7 +568,7 @@ class Face_Rigger:
             if pmanode == []:
                 print "Make a PMA"
                 # Make a pma node
-                pmaname = "pma_blend_" + sel[1]
+                pmaname = "pma_blend_" + ingrp
                 pmanode = cmds.shadingNode("plusMinusAverage", asUtility=True, n=pmaname)
                 # Get the current uv of the follicle
                 uv = cmds.getAttr(mnode + '.parameterU')
@@ -419,16 +585,17 @@ class Face_Rigger:
 
             if cmds.nodeType(sel[1]) == 'transform':
                 cons = cmds.listConnections(sel[1], scn=True)
-                
-                for c in cons:
-                    if 'pma_' in c:
-                        print "PMA Found"
-                        pmanode = c
-                        print pmanode
+                print cons
+                if cons != None:                
+                    for c in cons:
+                        if 'pma_' in c:
+                            print "PMA Found"
+                            pmanode = c
+                            print pmanode
                 if pmanode == []:
                     print "Make a PMA"
                     # Make a pma node
-                    pmaname = "pma_blend_" + sel[1]
+                    pmaname = "pma_blend_" + ingrp
                     pmanode = cmds.shadingNode("plusMinusAverage", asUtility=True, n=pmaname)
         print pmanode
         # Find the next open pma input_______________________________.
@@ -508,7 +675,7 @@ class Face_Rigger:
         print pmanode + '.input3D' + input + '.input3D' + outsuffix[-1:]
         # Connect the pma node to the appropriate sub control
         #if cmds.listConnections( ingrp + '.' + channel, d=False, s=True) == []:
-        print pmanode + '.output3D'
+        print pmanode + '.output3D' + outsuffix[-1:]
         print ingrp  + channel
         try:
             cmds.connectAttr(pmanode + '.output3D' + outsuffix[-1:], ingrp +  channel)
@@ -586,9 +753,9 @@ class Face_Rigger:
         cmds.setAttr('%s.input3D[0].input3Dy' % pma, uv)
 
         lctroffset = cmds.spaceLocator(n=rootname+'_lctrOffset')
-        lctroffsettrans = cmds.spaceLocator(n=rootname+'_lctrOffsetTrans')
-        lctroffsetrot = cmds.spaceLocator(n=rootname+'_lctrOffsetRot')
-        lctroffsetscale = cmds.spaceLocator(n=rootname+'_lctrOffsetScale')
+        lctroffsettrans = cmds.spaceLocator(n=rootname+'_OffsetLCTR_translation')
+        lctroffsetrot = cmds.spaceLocator(n=rootname+'_OffsetLCTR_rotation')
+        lctroffsetscale = cmds.spaceLocator(n=rootname+'_OffsetLCTR_scale')
         lctrsdk = cmds.spaceLocator(n=rootname+'_lctrSDK')
 
         locs = [lctroffset, lctroffsettrans, lctroffsetrot, lctroffsetscale, lctrsdk]
